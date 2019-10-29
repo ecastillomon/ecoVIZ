@@ -2,7 +2,7 @@ library(dplyr)
 library(ggplot2)
 library(lubridate)
 library(tidyr)
-
+setwd("/home/esteban/ecobici")
 estaciones=read.csv("data/estaciones.csv") %>%
   mutate(coordenadas=paste0(`location.lat`,",",`location.lon`), 
          longitud=location.lon,
@@ -23,7 +23,7 @@ base=dat_full %>%
   mutate_at(c("Fecha_Retiro","Fecha_Arribo"),function(x)as.Date(x,"%d/%m/%Y")) %>%
   mutate(Hora_Retiro=paste0(Fecha_Retiro," ",Hora_Retiro) %>% as.POSIXct(),
          Hora_Arribo=paste0(Fecha_Arribo," ",Hora_Arribo)%>% as.POSIXct()) %>%
-  filter(Hora_Retiro<as.Date("2019-06-13") & Hora_Retiro>=as.Date("2019-06-12")) %>%
+  filter(Hora_Arribo<as.Date("2019-06-13") & Hora_Retiro>=as.Date("2019-06-12")) %>%
   # filter(Ciclo_Estacion_Retiro %in% seleccionadas | Ciclo_Estacion_Arribo %in% seleccionadas) %>%
   mutate(dia_semana_retiro=weekdays(Hora_Retiro),
          dia_semana_arribo=weekdays(Hora_Arribo),
@@ -32,9 +32,16 @@ base=dat_full %>%
          periodo_retiro=floor_date(Hora_Retiro, unit="15 minutes"),
          periodo_arribo=floor_date(Hora_Arribo, unit="15 minutes")) 
 load("cache/capacity.RData")  
+
+
+pad_estacion=expand.grid(hora=seq(from=as.POSIXct("2019-06-12"),to=as.POSIXct("2019-06-13"),by="15 mins"),estacion=unique(base$Ciclo_Estacion_Retiro))
+
+
+
 temp=base %>%
   group_by(estacion=Ciclo_Estacion_Retiro,hora=periodo_retiro) %>%
   summarise(n_retiro=n()) %>%
+  full_join(pad_estacion,by=c("estacion","hora")) %>%
   bind_rows({
     base %>%
       group_by(estacion=Ciclo_Estacion_Arribo,hora=periodo_arribo) %>%
@@ -45,7 +52,8 @@ temp=base %>%
   arrange(estacion, hora) %>%
   group_by(estacion) %>%
   # padr::pad(interval = "1 hour",start_val = as.POSIXct("2019-06-01 00:00:00"),end_val = as.POSIXct("2019-07-01 00:00:00")) %>%
-  padr::fill_by_value(n_retiro,n_arribo,fill=0) %>%
+  # padr::fill_by_value(n_retiro,n_arribo,fill=0) %>%
+  mutate(retiros_60_min=rollsum(n_retiro,k=4,fill = NA,align = "right"), arribos_60_min=rollsum(n_arribo,k=4,fill = NA,align = "right")) %>%
   ungroup() %>%
   left_join(estaciones %>% select(id, districtName), by=c("estacion"="id")) %>%
   left_join(capacity,by=c("estacion"="id")) %>%
