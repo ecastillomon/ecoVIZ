@@ -59,8 +59,8 @@ temp=base %>%
   left_join(capacity,by=c("estacion"="id")) %>%
   left_join(estado %>% select(id,inicial) ,by=c("estacion"="id"))%>%
   arrange(hora) %>% 
-  group_by(estacion) %>% mutate(estado=inicial,estado=n_arribo-n_retiro,
-                                                               estado=inicial+ cumsum(estado ) ) 
+  group_by(estacion) %>% mutate(cambio=n_arribo-n_retiro,
+                                                               estado=inicial+ cumsum(cambio ) ) 
 # %>% filter(estacion==451)
 write.csv(temp,file="/home/esteban/ecobici-visualizacion/data/12-06-19.csv",row.names = FALSE)
 
