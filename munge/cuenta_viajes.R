@@ -2,6 +2,7 @@ library(dplyr)
 library(ggplot2)
 library(lubridate)
 library(tidyr)
+library(zoo)
 setwd("/home/esteban/ecobici")
 estaciones=read.csv("data/estaciones.csv") %>%
   mutate(coordenadas=paste0(`location.lat`,",",`location.lon`), 
@@ -34,6 +35,7 @@ base=dat_full %>%
 load("cache/capacity.RData")  
 
 
+# pad_estacion=expand.grid(hora=seq(from=as.POSIXct("2019-06-12"),to=as.POSIXct("2019-06-13"),by="15 mins"),estacion=unique(base$Ciclo_Estacion_Retiro))
 pad_estacion=expand.grid(hora=seq(from=as.POSIXct("2019-06-12"),to=as.POSIXct("2019-06-13"),by="15 mins"),estacion=unique(base$Ciclo_Estacion_Retiro))
 
 
@@ -64,5 +66,54 @@ temp=base %>%
 # %>% filter(estacion==451)
 write.csv(temp,file="/home/esteban/ecobici-visualizacion/data/12-06-19.csv",row.names = FALSE)
 
-# save(base, file="data/base_full.RData")
-# rm(dat_full)
+pad_estacion_2=expand.grid(hora=seq(from=as.POSIXct("2019-06-12"),to=as.POSIXct("2019-06-13"),by="15 mins"),estacion_retiro=unique(base$Ciclo_Estacion_Retiro),
+                           estacion_arribo=unique(base$Ciclo_Estacion_Arribo))
+
+temp=base %>%
+  group_by(estacion_retiro=Ciclo_Estacion_Retiro,estacion_arribo=Ciclo_Estacion_Arribo,hora=periodo_retiro) %>%
+  summarise(n=n()) %>%
+  full_join(pad_estacion_2,by=c("estacion_retiro","estacion_arribo","hora")) %>%
+  bind_rows({
+    base %>%
+      group_by(estacion_retiro=Ciclo_Estacion_Arribo,estacion_arribo=Ciclo_Estacion_Retiro,hora=periodo_retiro) %>%
+      summarise(n=n())
+    }) %>%
+  group_by(estacion_retiro,estacion_arribo,hora) %>%
+  summarise(n=sum(n, na.rm = TRUE)) %>%
+  ungroup() %>%
+  arrange(estacion_retiro,estacion_arribo,hora) %>%
+  group_by(estacion_retiro,estacion_arribo) %>%
+  # padr::pad(interval = "1 hour",start_val = as.POSIXct("2019-06-01 00:00:00"),end_val = as.POSIXct("2019-07-01 00:00:00")) %>%
+  # padr::fill_by_value(n_retiro,n_arribo,fill=0) %>%
+  mutate(viajes_60_min=rollsum(n,k=4,fill = NA,align = "right")) %>%
+  ungroup()
+
+
+temp=base %>%
+  group_by(estacion_retiro=Ciclo_Estacion_Retiro,estacion_arribo=Ciclo_Estacion_Arribo,hora=periodo_retiro) %>%
+  summarise(n=n()) %>%
+  # full_join(pad_estacion_2,by=c("estacion_retiro","estacion_arribo","hora")) %>%
+  bind_rows({
+    base %>%
+      group_by(estacion_retiro=Ciclo_Estacion_Arribo,estacion_arribo=Ciclo_Estacion_Retiro,hora=periodo_retiro) %>%
+      summarise(n=n())
+  }) 
+
+
+
+pad_estacion_3=expand.grid(hora=seq(from=as.POSIXct("2019-06-12"),to=as.POSIXct("2019-06-13"),by="15 mins"),estacion=unique(paste0(temp$estacion_retiro,"--",temp$estacion_arribo))) %>%
+  separate(estacion,c("estacion_retiro","estacion_arribo"),sep="--",remove=TRUE) %>%mutate_at(c(c("estacion_retiro","estacion_arribo")), function(x)as.numeric(x))
+serie=temp %>%
+  full_join(pad_estacion_3,by=c("estacion_retiro","estacion_arribo","hora"))%>%
+  group_by(estacion_retiro,estacion_arribo,hora) %>%
+  summarise(n=sum(n, na.rm = TRUE)) %>%
+  ungroup() %>%
+  arrange(estacion_retiro,estacion_arribo,hora) %>%
+  group_by(estacion_retiro,estacion_arribo) %>%
+  # padr::pad(interval = "1 hour",start_val = as.POSIXct("2019-06-01 00:00:00"),end_val = as.POSIXct("2019-07-01 00:00:00")) %>%
+  # padr::fill_by_value(n_retiro,n_arribo,fill=0) %>%
+  mutate(viajes_60_min=rollsum(n,k=4,fill = NA,align = "right")) %>%
+  ungroup()
+
+
+write.csv(serie,file="/home/esteban/ecobici-visualizacion/data/12-06-19-aristas.csv",row.names = FALSE)
