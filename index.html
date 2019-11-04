@@ -13121,27 +13121,52 @@ div#notebook {
 <center>
     <div>
         <a href='data/10000.png'>
-            <img src="data/10000.png" width="800"/></a>
+            <img src="data/10000.png" width="750"/></a>
         <b>Portada.</b> Los primeros 10,000 viajes de septiembre 2019 (click en imagen para ver en tamaño real).
     </div>  
-</center><h2 id="Introducci&#243;n">Introducci&#243;n<a class="anchor-link" href="#Introducci&#243;n">&#182;</a></h2><p>Choro mareador</p>
-<h2 id="El-estado-de-la-red">El estado de la red<a class="anchor-link" href="#El-estado-de-la-red">&#182;</a></h2><h3 id="Justificar-la-elecci&#243;n-de-un-d&#237;a.">Justificar la elecci&#243;n de un d&#237;a.<a class="anchor-link" href="#Justificar-la-elecci&#243;n-de-un-d&#237;a.">&#182;</a></h3><p>La red de ecobicis es un sistema que brinda servicio a una enorma cantidad de usuarios, cómo tal, es un sistema complejo que cuenta con 480 estaciones y tiene cerca de <mark>tantos viajes</mark>. Para facilitar la comprensión del fenómeno veamos las distribuciones de la utilización en algunos días de la semana a lo largo del día.</p>
+</center><p>La red de ecobicis es un sistema que brinda servicio a una enorma cantidad de usuarios, cómo tal, es un sistema complejo que cuenta con 480 estaciones y tiene cerca de 600,000 viajes al mes. El uso de la bicicleta tiene beneficios en salud y ahorra tiempos de traslado en distancias cortas a los usuarios, mientras ayuda al medio ambiente, y disminuye el tráfico en la ciudad.</p>
+<h2 id="El-estado-de-la-red">El estado de la red<a class="anchor-link" href="#El-estado-de-la-red">&#182;</a></h2><p>La cantidad de datos generados por <strong>ECOBICI</strong> es inmensa ya que se genera un registro por viaje, cada uno de estos viajes cuenta con campos como:</p>
+<ul>
+<li>Edad y género del usuario del viaje.</li>
+<li>Estación de retiro y arribo.</li>
+<li>Hora de retiro y arribo.</li>
+<li>Entre otros.</li>
+</ul>
+<p>Para empezar a entender el sistema de <strong>ECOBICI</strong> empezemos por visualizar como son las distribuciones de viajes a lo largo de una semana.
+<br><br></p>
 <center>
 <div>
-    <b>Figura 1.</b> Distribución de retiros en todas las estaciones a lo largo del día en marzo de 2019.
-    <img src="plots/analisis_polanco/viajes-hora-2.png" width="1000"/>
+    <b>Figura 1.</b> Distribución de retiros durante una semana de marzo 2019 cada 15 minutos.
+    <img src="plots/semana.png" width="1000"/>
 
 </div>
-</center><p>Es interesante ver la distinción clara entre los días laborales y los fines de semana. Entre días laborales las distribuciones parecen ser idénticas excepto talvez por la tarde del viernes. Es por esto que para entender el sistema optamos por analizar un sólo día laboral, <strong>12-06-19</strong>.</p>
-<h3 id="GIF-de-actividad-diar&#237;a.">GIF de actividad diar&#237;a.<a class="anchor-link" href="#GIF-de-actividad-diar&#237;a.">&#182;</a></h3><p>El siguiente gráfico muestra la actividad total de nuestro sistema el día 12 de junio del 2019. Es decir muestra el estado de las estaciones, el balance del flujo, la cantidad de actividad además de .</p>
+</center>
+Estos patrones definidos para los días laborales, el viernes y fin de semana resaltan inmediatamente a la vista cuando visualizamos los retiros como una serie de tiempo, veamos las distribuciones promedio para cada tipo de día.
+<br><br>
 <center>
 <div>
-    <b>Figura 2.</b> Actividad a lo largo del día 12 de junio de 2019 (click en GIF para ver en tamaño real).
-    <video id="sampleMovie" width='600' src="video.mov" controls></video>
+    <b>Figura 2.</b> Distribución promedio de retiros en todas las estaciones a lo largo del día en abril de 2019.
+    <img src="plots/viajes-dia-sin-titulo.png" width="700"/>    
+</div>
+</center><p>Es interesante ver la distinción clara entre los días laborales y los fines de semana. Entre días laborales las distribuciones parecen ser idénticas con la excepción del viernes por la tarde. En días feriados, que en la <strong>Figura 2.</strong> coinciden con los días de Semana Santa, se observa una distribución casi idéntica a la de los fines de semana. Los días laborales son los que tienen la mayor cantidad de viajes, estos días tienen una distribución bimodal, con los picos coincidiendo con las horas de entrada y salida de la jornada laboral. Los fines de semana el sistema llega a su máximo uso a medio día.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Un-d&#237;a-laboral">Un d&#237;a laboral<a class="anchor-link" href="#Un-d&#237;a-laboral">&#182;</a></h3><p>Los días laborales son los más activos con 2 horas pico claras en la mañana y en la tarde, viendo las gráficas anteriores podemos afirmar sin miedo que los días laborales son practicamente idénticos, es por esto que pensamos que visualizando la actividad en un día laboral puede ser suficiente para entender la mayoría de la actividad en el sistema.</p>
+<p>El siguiente video muestra la actividad total de <strong>ECOBICI</strong> el día 12 de junio del 2019, se seleccionó este día por ser un día laboral cualquiera en la muestra, teniendo cuidado de no tomar días atípicos por clima u otras razones. Este día hubo 32363 viajes en total, con 3738 viajes por hora durante la máxima hora pico.</p>
+<p>Síentete libre de pausar en las horas pico (8am y 8pm aprox.).
+<br><br></p>
+<center>
+<div>
+    <b>Figura 3.</b> Actividad a lo largo del día 12 de junio de 2019<br>
+    <video id="sampleMovie" width='600' src="data/video.mov" controls></video>
     <img src="data/cbar_balance.png" width="736"/>
     <img src="data/cbar_estado.png" width="700"/>
-    <img src="data/cbar_viajes.png" width="700"/>
-
+    <img src="data/cbar_viajes.png" width="690"/>
 </div>
 </center>
 </div>
@@ -13150,6 +13175,15 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<p>Tomemos el tiempo para entender el gráfico anterior y así poder extraer toda la información que nos otorga. Empecemos por visualizar a las estaciones como cada uno de los círculos. El tamaño del círculo corresponde a la suma de retiros y arribos que hubo en esa estacion por hora, siendo 140 arribos más retiros la actividad máxima por hora en una estación. Cada una de estas estaciones está coloreada en el interior y en el exterior. El color <strong>interior</strong> responde al balance presentado por hora, es decir, si en esa estación han habido más retiros o arribos en una hora. Un color rojo obscuro responde a sólo retiros y un azul obscuro a sólo arribos, blanco muestra un balance perfecto. El color <strong>exterior</strong> responde al estado de la estación, es decir, la proporción de los espacios para bicicletas ocupados por una <strong>ECOBICI</strong> en esa estación al corte de tiempo, un color rojo obscuro responde a una estación sin bicicletas disponibles mientras que un color blanco muestra una estación totalmente ocupada. Los viajes están definidos por las lineas rectas entre 2 estaciones en las que se muestra la cantidad de viajes por hora.</p>
+<p>Una reproducción del video permite identificar correctamente las horas pico, además es posible ver como en las mañanas, las estaciones cercanas al transporte público como el metro polanco y metro Buenavista son los puntos de partida de la mayoría de los viajes, viajes que terminan en zonas con alta ocupación laboral como algunas partes de Polanco y la avenida Reforma. Este fenómeno se reproduce casi idéntico en la tarde sólo que en sentido opuesto, ahora las zonas con alta ocupación laboral resultan ser los puntos de partida y los puntos de llegada son intersecciones con transporte público de mayor alcance. Veamos un sólo cuadro del vídeo para la hora pico de la mañana.
+<br><br></p>
+<center>
+    <b>Figura 4.</b> ECOBICI 6 de junio 8:30 am.
+    <div>
+         <img src="plots/830.png" width="600"/>
+    </div>  
+</center><p>La visualización destaca la saturación del sistema en su periferia. Esto sugiere que una buena parte de los usuarios del sistema están llegando de otros lugares, y que probablemente estarían interesados en una cobertura más amplia del sistema. Además si nos concentramos en el estado de las estaciones(el borde de cada círculo) es posible ver que tras cada ráfaga de llegadas y salidas, las estaciones quedan llenas y vacías pues al haber muchas llegadas estas se saturan(bordes blancos) y al haber muchas salidas estas se vacían(bordes negros). La dinámica particular de los sistemas de bicicletas compartidas sugieren hacer enfásis en una optimización del inventario mediante un rebalanceo, como se muestra en <em>-- Castillo ,2019.</em> para así evitar saturaciones y huecos.</p>
 
 </div>
 </div>
@@ -13157,25 +13191,75 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Enlace-al-poster-de-todo-el-mes.">Enlace al poster de todo el mes.<a class="anchor-link" href="#Enlace-al-poster-de-todo-el-mes.">&#182;</a></h3><center>
-    <b>Figura 3.</b> Flujo durante septiembre 2019 (click en imagen para ver en tamaño real).
-    <div><a href='data/septiembre.png'>
-            <img src="data/septiembre.png" width="600"/></a>
-         <img src="data/cbar_flujo.png" width="700"/>
+<h2 id="Un-poco-de-perspectiva-y-escala">Un poco de perspectiva y escala<a class="anchor-link" href="#Un-poco-de-perspectiva-y-escala">&#182;</a></h2><p>¿Quíenes son los usuarios de ECOBICI? Por la distribución de viajes en días laborales podemos intuir que en general estos usuarios corresponden a trabajadores. Vayamos un poco más allá e intentemos entender mejor sus perfiles con los siguientes gráficos.
+<br><br></p>
+<table><center>
+    <b>Figura 5. y 6. </b> Porcentaje de viajes por sexo y viajes por edad en septiembre 2019.</center>
+    <tr>
+        <td>
+<center>
+    <img src="plots/genero.png" />
+
+</center>
+        </td>
+        <td >
+<center>
+    <div>
+            <img src="plots/edades.png" width=600/>
     </div>  
 </center>
+        </td>
+    </tr>
+</table><p>Ver las diferencias de uso por sexo puede ser alarma de un problema de género, en un análisis más profundo se podría visualizar esta diferencia en cada una de las estaciones para señalar zonas más o menos seguras para las mújeres en el panorama de la ciudad. Por otro lado la distribución de las edades resalta areas de oportunidad para programas sociales como la inclusión de adolescentes al sistema <strong>ECOBICI</strong>, o la posibilidad de incentivar la actividad física en gente con edad mayor a 40 años.</p>
+<p>Ahora perdamos un poco el enfoque en <strong>ECOBICI</strong> y obtengamos un poco de perspectiva de <strong>escala</strong>, veamos al sistema envuelto por la ciudad.
+<br><br></p>
+<center>
+    <b>Figura 7.</b> ECOBICI y CDMX.
+    <div>
+            <img src="plots/ciudad_con_corazon.png" width="500"/>
+    </div>  
+</center><p>¡<strong>ECOBICI</strong> ocupa una pequeñísima área de la ciudad de México! Sin embargo es importante entender que casi una tercera parte de la Ciudad de México está ocupada por regiones boscosas alredor de Milpa Alta y el Ajusco así que concentrémonos sólo en la zona urbana haciendo un poco de zoom.
+<br><br></p>
+<center>
+    <b>Figura 8.</b> ECOBICI, metro y zona urbana.
+    <div>
+            <img src="plots/ciudad_sin_bici.png" width="700"/>
+    </div>  
+</center><p>La oportunidad para extender el sistema tal y como está es inmensa, incluyendo una posible integración con zonas urbanas en el estado de México e integraciones con otros sistemas de transporte y movilidad inteligente con mayor alcance. Además da pie a la imaginación de poder incluir ecobicis de montaña en zonas rurales entre otros posibles programas que impulsen el bienestar social.</p>
+
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Ecobici-dentro-de-la-ciudad">Ecobici dentro de la ciudad<a class="anchor-link" href="#Ecobici-dentro-de-la-ciudad">&#182;</a></h2><p>Genero edad y ecobici.</p>
-<p>Ecobici y turismo.</p>
-<p>Errores y areas de oportunidad.</p>
-<h3 id="Posibles-planteamientos-de-escalamiento.">Posibles planteamientos de escalamiento.<a class="anchor-link" href="#Posibles-planteamientos-de-escalamiento.">&#182;</a></h3><p>Qué pedo caben más estaciones!!!</p>
-<p><img src="data/cdmx.png" alt=""></p>
-<h2 id="Conclusiones">Conclusiones<a class="anchor-link" href="#Conclusiones">&#182;</a></h2>
+<h2 id="Agregando-la-informaci&#243;n-del-sistema">Agregando la informaci&#243;n del sistema<a class="anchor-link" href="#Agregando-la-informaci&#243;n-del-sistema">&#182;</a></h2><p>Al ser este artículo un ejercicio de visualización creamos el siguiente gráfico con la ídea de que sea observado en una impresión de tamaño significativo. En el se muestra la actividad agregada de <strong>ECOBICI</strong> durante el mes de septiembre de 2019. Si hacemos zoom en el gráfico podemos observar detalladamente el nombre de cada estación, su actividad, los flujos entre estaciones así como las estaciones de metro cercanas al sistema.
+<br><br></p>
+<center>
+    <b>Figura 9.</b> Flujo durante septiembre 2019 (click en imagen para ver en tamaño real).
+    <div><a href='data/septiembre.png'>
+            <img src="data/septiembre.png" width="900"/></a>
+         <img src="data/cbar_flujo.png" width="700"/>
+    </div>  
+</center><p>Aproximarse a esta visualización permite generar una primera ídea bastante robusta de una posible red de ciclopistas y nuevas estaciones. Exigencias justificadas pues muchas de estas rutas ya están siendo ocupadas, apartar algunos metros en vías públicas para el flujo de estos ecociclistas y ciclistas sólo sería reconocerles y brindarles seguridad y reconocimiento por parte del gobierno. Además de favorecer sistemas de movilidad inteligentes aun con los pocos incentivos que existen para ellos. Darles escala a estas formas de movilidad permitiría mejorar muchas variables sociales que se encuentran en este momento en números rojos.</p>
+<ul>
+<li>Incremento de la salud por incremento en la actividad física.</li>
+<li>Incremento en la calidad del aire por disminución de transportes propulsados por hidrocarburos.</li>
+<li>Disminución en la congestión vial.</li>
+<li>Disminución en la sobrecarga de otros sistemas de transporte público, sobre todo en la famosa última milla.</li>
+<li>Entre otros efectos conocidos propiciados por el uso de la bicicleta.</li>
+</ul>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Conclusiones">Conclusiones<a class="anchor-link" href="#Conclusiones">&#182;</a></h2><p>La atención adecuada en la escala de los proyectos sociales contemporáneos es una de las variables más importantes en el éxito de estos, es por esto que creémos en la cooperación. Además estamos seguros que la búsqueda y validación de soluciones públicas debe ser un ejercicio colectivo,por esto, la totalidad de los análisis desarrollados en este proyecto pueden ser replicados, pues todos los scripts están disponibles en este <a href="https://github.com/est092/ecoVIZ">repositorio</a> público. El árticulo fue diseñado en un <strong>Jupyter Notebook</strong> mientras que el contenido fue elaborado 50% en <strong>Python</strong> con gráficos de <strong>matplotlib</strong> y 50% en <b>R</b>  con <strong>ggplot</strong> por mencionar algunas de las librerías de software libre que fueron ocupadas.</p>
+<p>La correcta interpretación de los datos permite el apalancamiento necesario para una implementación eficaz de políticas públicas, celebramos el reciente <a href="https://www.jefaturadegobierno.cdmx.gob.mx/comunicacion/nota/anuncia-gobierno-de-la-ciudad-de-mexico-nueva-licitacion-para-el-sistema-ecobici">anuncio</a> emitido por la secretaría de movilidad para una nueva licitación para el sistema <strong>ECOBICI</strong> y esperamos que el ganador tome en cuenta la información existente.</p>
+<p>Esperamos que estas visualizaciones hayan sido suficientes para respaldar nuestra narrativa además de generar otras más en las mentes de los lectores.</p>
+
 </div>
 </div>
 </div>
