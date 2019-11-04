@@ -3,3 +3,5 @@
 .RData
 .Ruserdata
 data/base_full.RData	
+data/gifmapa/*
+data/gifmapa2/*
