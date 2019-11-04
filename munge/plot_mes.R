@@ -24,35 +24,38 @@ temp=base  %>%
   group_by(estacion=Ciclo_Estacion_Retiro,hora=periodo_retiro) %>%
   summarise(n_retiro=n()) %>%ungroup() %>%
   full_join(pad_estacion,by=c("estacion","hora")) %>%
-  bind_rows({
-    base %>%
-      group_by(estacion=Ciclo_Estacion_Arribo,hora=periodo_retiro) %>%
-      summarise(n_arribo=n())   }) %>%
+  # bind_rows({
+  #   base %>%
+  #     group_by(estacion=Ciclo_Estacion_Arribo,hora=periodo_retiro) %>%
+  #     summarise(n_arribo=n())   }) %>%
   group_by(estacion,hora) %>%
-  summarise(n_retiro=sum(n_retiro, na.rm = TRUE), n_arribo=sum(n_arribo, na.rm = TRUE)) %>%
+  summarise(n_retiro=sum(n_retiro, na.rm = TRUE)) %>%
+  # summarise(n_retiro=sum(n_retiro, na.rm = TRUE), n_arribo=sum(n_arribo, na.rm = TRUE)) %>%
   ungroup() %>%
   mutate(dia_semana_retiro=weekdays(hora),horas_retiro=strftime(hora, format="%H:%M"),
-         tipo=case_when(as.Date(hora)==as.Date("2019-04-18") | as.Date(hora)==as.Date("2019-04-19")~ "Inhábil",
+         tipo=case_when(as.Date(hora)==as.Date("2019-04-18") | as.Date(hora)==as.Date("2019-04-19")~ "Feriado",
                         dia_semana_retiro%in% c("lunes","martes","miércoles","jueves") ~ "Laboral",
                         dia_semana_retiro%in% c("viernes") ~ "Viernes",
                         dia_semana_retiro%in% c("sábado","domingo") ~ "Fin de Semana",
-                        TRUE~"otro"),n_retiro=coalesce(n_retiro,as.integer(0)),total=n_retiro+n_arribo,
+                        TRUE~"otro"),n_retiro=coalesce(n_retiro,as.integer(0)),total=n_retiro,
          ) %>%
   # arrange(estacion, horas_retiro) %>%
   group_by(estacion,tipo,hora, horas_retiro) %>%
-  summarise(n_retiro=sum(n_retiro, na.rm = TRUE), n_arribo=sum(n_arribo, na.rm = TRUE), total=sum(total)) %>%ungroup()
+  summarise(n_retiro=sum(n_retiro, na.rm = TRUE), total=sum(total)) %>%ungroup()
 
 temp %>%
   filter(floor_date(hora, unit="months")==as.Date("2019-04-01"))  %>% 
+  # summarise(sum(total))
   mutate(horas_retiro=paste0(floor_date(hora, unit="months")," ",horas_retiro)%>% as.POSIXct(format="%Y-%m-%d %H:%M")) %>%
   group_by(tipo, hora,horas_retiro) %>%
-  summarise(n_retiro=sum(n_retiro, na.rm = TRUE), n_arribo=sum(n_arribo, na.rm = TRUE), total=sum(total)) %>%ungroup() %>%
+  summarise(n_retiro=sum(n_retiro, na.rm = TRUE), total=sum(total)) %>%ungroup() %>%
   filter(total>0) %>%
   # group_by(horas_retiro,tipo) %>%tally() ->a3
   # filter(tipo=="fin_semana" & total==0) %>%
   { ggplot(., aes(x= horas_retiro, y= total, group=tipo,colour=tipo)) +
       # geom_point() +
-      geom_smooth(aes(linetype=tipo),formula = y~x)+ 
+      # geom_smooth(method = lm, formula = y ~ splines::bs(x, 3), se = TRUE)+
+      geom_smooth(aes(linetype=tipo),formula = y~x)+
       # guides(colour = guide_legend(override.aes = list(linetype = override.linetype)))+
       # scale_linetype(guide=FALSE)+
       # scale_x_discrete(bre)
@@ -64,8 +67,9 @@ temp %>%
       theme_minimal()+
       theme(axis.text.x = element_text(face = "bold",
                                        size = 6, angle = 90),legend.position = c(.2, .8),
-            legend.background = element_blank())+
-      ggsave(file="/home/esteban/ecobici-visualizacion/plots/viajes-dia.png") }
+            legend.background = element_blank())   +
+      ggsave(file="/home/esteban/ecobici-visualizacion/plots/viajes-dia.png")
+    }
  
 
 
@@ -79,7 +83,9 @@ temp %>%
   # group_by(estacion) %>% mutate(cambio=n_arribo-n_retiro,
   #                               estado=inicial+ cumsum(cambio ) )  
 
-
+temp %>%ungroup() %>%
+  filter((floor_date(hora, unit="days"))==as.Date("2019-04-03")) ->a2 %>%
+  summarise(sum(n_retiro))
 
 base %>%
   filter(Hora_Retiro>=as.Date("2018-03-01") & Hora_Retiro<as.Date("2018-04-01")) %>%
