@@ -33,23 +33,29 @@ temp=base  %>%
   # summarise(n_retiro=sum(n_retiro, na.rm = TRUE), n_arribo=sum(n_arribo, na.rm = TRUE)) %>%
   ungroup() %>%
   mutate(dia_semana_retiro=weekdays(hora),horas_retiro=strftime(hora, format="%H:%M"),
-         tipo=case_when(as.Date(hora)==as.Date("2019-04-18") | as.Date(hora)==as.Date("2019-04-19")~ "Feriado",
-                        dia_semana_retiro%in% c("lunes","martes","miércoles","jueves") ~ "Laboral",
-                        dia_semana_retiro%in% c("viernes") ~ "Viernes",
-                        dia_semana_retiro%in% c("sábado","domingo") ~ "Fin de Semana",
+         tipo=case_when(as.Date(hora)==as.Date("2019-04-18") | as.Date(hora)==as.Date("2019-04-19")~ "Holiday",
+                        dia_semana_retiro%in% c("lunes","martes","miércoles","jueves") ~ "Working Day",
+                        dia_semana_retiro%in% c("viernes") ~ "Friday",
+                        dia_semana_retiro%in% c("sábado","domingo") ~ "Weekend",
                         TRUE~"otro"),n_retiro=coalesce(n_retiro,as.integer(0)),total=n_retiro,
          ) %>%
   # arrange(estacion, horas_retiro) %>%
   group_by(estacion,tipo,hora, horas_retiro) %>%
   summarise(n_retiro=sum(n_retiro, na.rm = TRUE), total=sum(total)) %>%ungroup()
 
+write.csv(temp,file = "data/viajes_mes.csv",row.names = FALSE)
 temp %>%
   filter(floor_date(hora, unit="months")==as.Date("2019-04-01"))  %>% 
+  # filter(hora>=as.POSIXct("2019-04-05 05:30:00 CST") | hora<=as.POSIXct("2019-04-05 00:30:00 CST")) %>%
   # summarise(sum(total))
   mutate(horas_retiro=paste0(floor_date(hora, unit="months")," ",horas_retiro)%>% as.POSIXct(format="%Y-%m-%d %H:%M")) %>%
   group_by(tipo, hora,horas_retiro) %>%
   summarise(n_retiro=sum(n_retiro, na.rm = TRUE), total=sum(total)) %>%ungroup() %>%
   filter(total>0) %>%
+  mutate(horas_retiro=case_when(horas_retiro<=as.POSIXct("2019-04-01 01:00:00") ~horas_retiro +days(1) ,
+                                # horas_retiro<=as.POSIXct("2019-04-01 05:30:00") ~horas_retiro +days(1) 
+                                TRUE~ horas_retiro)) %>%
+  filter(horas_retiro>=as.POSIXct("2019-04-01 05:00:00") )%>%
   # group_by(horas_retiro,tipo) %>%tally() ->a3
   # filter(tipo=="fin_semana" & total==0) %>%
   { ggplot(., aes(x= horas_retiro, y= total, group=tipo,colour=tipo)) +
@@ -59,16 +65,26 @@ temp %>%
       # guides(colour = guide_legend(override.aes = list(linetype = override.linetype)))+
       # scale_linetype(guide=FALSE)+
       # scale_x_discrete(bre)
-      scale_x_datetime(date_labels = "%H:%M",  breaks = seq(as.POSIXct("2019-04-01 00:00:00 CET"),
-                                                            as.POSIXct("2019-04-01 23:59:59 CET"), by="60 mins")) +
-      scale_y_continuous(label=scales::comma_format())+
+      scale_x_datetime(date_labels = "%H:%M",  breaks = seq(as.POSIXct("2019-04-01 05:00:00 CET"),
+                                                            as.POSIXct("2019-04-02 01:00:00 CET"), by="120 mins"), ) +
+    # limits = c(as.POSIXct("2019-04-05 05:30:00 CST"),as.POSIXct("2019-04-06 00:30:00 CST"))
+      scale_y_continuous(label=scales::comma_format(),limit=c(10,800))+
       # geom_text(aes(label=as.Date(hora),alpha=.5,size=1.5), color="black",angle=90)+
-      labs(x="Hora", y="Viajes Totales",  title="Viajes Totales Promedio en Abril 2019", color="Día",linetype="Día") +
-      theme_minimal()+
+      labs(x="Hour", y="Total Trips",  title="Average Daily Trips (April 2019)", color="Day",linetype="Day") +
+      # theme_minimal()+
+      
+      guides(color=guide_legend(override.aes=list(fill=NA)))+
+      theme_hc()  +scale_colour_hc() +
       theme(axis.text.x = element_text(face = "bold",
-                                       size = 6, angle = 90),legend.position = c(.2, .8),
-            legend.background = element_blank())   +
-      ggsave(file="/home/esteban/ecobici-visualizacion/plots/viajes-dia.png")
+                                                   size = 15, angle = 90),legend.position = c(.1, .9),legend.text = element_text(size = 20),
+                        # legend.background = element_blank(),
+                        panel.background = element_rect(fill = NA),legend.title = element_blank(),
+                        panel.grid.major.x = element_line(colour = "grey50",linetype = c("28")),
+            panel.grid.major.y= element_blank(),
+            
+                        # panel.grid.major = element_line(linetype = c("28"), colour = "grey50"),
+                        panel.ontop = TRUE)  +
+      ggsave(file="/home/esteban/ecobici-visualizacion/plots/viajes-dia-ingles.png",width = 16 ,height = 8)
     }
  
 

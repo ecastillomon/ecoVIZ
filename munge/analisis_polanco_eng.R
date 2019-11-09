@@ -65,7 +65,7 @@ cuenta_diaria %>%
   scale_x_time()+
   theme(axis.text.x = element_text(face = "bold",
                                    size = 6, angle = 90),strip.text.y = element_blank()) +
-  ggsave(file="output/analisis_polanco/viajes-hora-2-eng.png")
+  ggsave(file="/home/esteban/ecobici-visualizacion/plots/viajes-hora-2-eng.png")
 
 temp=base%>%
   select(horas_retiro) %>%
