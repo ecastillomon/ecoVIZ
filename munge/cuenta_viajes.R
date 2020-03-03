@@ -89,15 +89,18 @@ temp=base %>%
   ungroup()
 
 
-temp=base %>%
-  group_by(estacion_retiro=Ciclo_Estacion_Retiro,estacion_arribo=Ciclo_Estacion_Arribo,hora=periodo_retiro) %>%
-  summarise(n=n()) %>%
-  # full_join(pad_estacion_2,by=c("estacion_retiro","estacion_arribo","hora")) %>%
-  bind_rows({
-    base %>%
-      group_by(estacion_retiro=Ciclo_Estacion_Arribo,estacion_arribo=Ciclo_Estacion_Retiro,hora=periodo_retiro) %>%
-      summarise(n=n())
-  }) 
+
+## C
+# 
+# temp=base %>%
+#   group_by(estacion_retiro=Ciclo_Estacion_Retiro,estacion_arribo=Ciclo_Estacion_Arribo,hora=periodo_retiro) %>%
+#   summarise(n=n()) %>%
+#   # full_join(pad_estacion_2,by=c("estacion_retiro","estacion_arribo","hora")) %>%
+#   bind_rows({
+#     base %>%
+#       group_by(estacion_retiro=Ciclo_Estacion_Arribo,estacion_arribo=Ciclo_Estacion_Retiro,hora=periodo_retiro) %>%
+#       summarise(n=n())
+#   })
 
 
 
