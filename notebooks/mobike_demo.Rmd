@@ -1,0 +1,53 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+Se leen los primeros 30 viajes de del día de de junio del 2019
+```{r}
+# sudo apt install libgdal-dev
+
+mobike=openxlsx::read.xlsx("data/Viajes CDMX con Colonias_Mobike.xlsx")
+
+# mobike %>% mutate_at(c("start_time_local","end_time_local"), function(x)lubridate::as_date(x,origin = "1899-12-30")) %>% 
+  
+geo_jsons=mobike %>% 
+  mutate_at(c("start_time_local","end_time_local"), function(x)openxlsx::convertToDateTime(x) )%>% mutate(id=row_number()) %>% 
+  mutate(coordenadas_inicio=paste0(lon_ini,",",lat_ini),coordenadas_fin=paste0(lon_fin,",",lat_fin)) %>% 
+  select(id,matches("coordenadas"), matches("time"),duration,distance) %>% 
+  head(30) %>%
+  group_split(id) %>% 
+  # map(function(x){
+    # x=.
+  purrr::map_dfr(function(x){
+    # x=.
+    tryCatch({
+    # print(x)
+    mapsapi::mp_directions(
+      origin = x$coordenadas_inicio,
+      destination = x$coordenadas_fin,
+      alternatives = FALSE,
+      key="AIzaSyB6BLEl5Bhygcrfy-Q4USZ6dMghajMNax0",
+      mode = "bicycling"
+    )  %>% mapsapi::mp_get_routes() %>% 
+    geojsonsf::sf_geojson() %>% 
+      jsonlite::toJSON() ->js
+    x %>% mutate(geojson=js)
+    },error=function(e){print(x);x})
+  })
+
+json_file=jsonlite::toJSON(geo_jsons,auto_unbox = TRUE)
+jsonlite::write_json(json_file, "data/viajes_mobike_TOP30.json")
+
+
+```
+
+Se muestra la información obtenida de la API de Google Maps
+```{r}
+DT::datatable( geo_jsons,filter = 'top',  extensions = 'Buttons', 
+    options = list(dom = 'Bfrtip', pageLength = 100,
+                   buttons = c('excel', "csv"))) 
+
+```
+
