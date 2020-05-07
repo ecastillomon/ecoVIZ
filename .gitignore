@@ -3,4 +3,14 @@
 .RData
 .Ruserdata
 data/base_full.RData	
+<<<<<<< HEAD
+data/gifmapa/*
+data/gifmapa2/*
+map.gif
+map2.gif
+12-06-19-aristas.csv
+video.avi
+map3.gif
+=======
 plots
+>>>>>>> 088642f745e355a2f9d5bc4b5670a4214e6e0a17
