@@ -1,0 +1,24 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+# install.packages("dbscan")
+library(dbscan)
+library(dplyr)
+dat=jsonlite::fromJSON("data/viajes_mobike.json", simplifyDataFrame = TRUE,flatten =FALSE) %>% 
+  jsonlite::fromJSON(., simplifyDataFrame = TRUE,flatten =FALSE)
+db:
+
+geo_jsons=geo_jsons %>%
+  # select() %>% 
+  # mutate(geo_char=as.character(geojson)) %>% 
+  filter(grepl('-[0-9]+\\.[0-9]+,[0-9]+\\.[0-9]+',
+               as.character(geojson) ))
+json_file=jsonlite::toJSON(geo_jsons,auto_unbox = TRUE)
+jsonlite::write_json(json_file, "data/viajes_mobike.json")
+
+```
+
