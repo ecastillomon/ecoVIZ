@@ -32,36 +32,46 @@ df_cruces=sel %>% rename_at(vars(matches(".1$")), function(x){gsub(".1$","_calle
   tidyr::unite("CVE_VIAL_INTER", c(CVE_VIAL_calle_1,CVE_VIAL_calle_2), remove=FALSE, sep="--") %>%
   tidyr::unite("CVE_SEG_INTER", c(CVE_SEG_calle_1,CVE_SEG_calle_2), remove=FALSE, sep="--") %>% 
   tidyr::unite("TIPO_INTER", c(TIPOVIAL_calle_1,SENTIDO_calle_1,TIPOVIAL_calle_2,SENTIDO_calle_2), remove=FALSE, sep="--") %>% 
-  select(matches("INTER"), CVE_ENT=CVE_ENT_calle_1) %>%  filter(grepl("POINT", st_geometry_type(geometry)))
+  select(matches("INTER"), CVE_ENT=CVE_ENT_calle_1) %>%  filter(grepl("POINT", st_geometry_type(geometry))) %>% 
+  st_cast("POINT")
+
+# saveRDS(df_cruces,"data/df_cruces.RDS")
+# reticulate::py_save_object(df_cruces,"data/df_cruces.pickle")
 
 a_poly = st_polygon(list(rbind(c(-99.5, 20.5), c(-98.5, 20.5), c(-98.5, 18.5),c(-99.5, 18.5) ,c(-99.5, 20.5))))
 a = st_sfc(a_poly) %>% st_set_crs(4326) %>% st_as_sf(x =data.frame(pais= "mexico") ) %>% st_transform(st_crs(df_vial))
 
-df_salidas=df_salidas %>% 
+df_salidas_cruces=df_salidas %>% 
   st_transform(st_crs(df_vial)) %>% 
   st_join(df_cruces, st_nearest_feature ) %>% st_join(a) %>% filter(!is.na(pais))
 
-df_llegadas=df_llegadas %>% 
+# saveRDS(df_salidas_cruces,"data/df_salidas_cruces.RDS")
+# reticulate::py_save_object(df_salidas_cruces,"data/df_salidas_cruces.pickle")
+
+df_llegadas_cruces=df_llegadas %>% 
   st_transform(st_crs(df_vial)) %>% 
   st_join(df_cruces, st_nearest_feature ) %>% st_join(a) %>% filter(!is.na(pais))
 
+# saveRDS(df_llegadas_cruces,"data/df_llegadas_cruces.RDS")
+# reticulate::py_save_object(df_llegadas_cruces,"data/df_llegadas_cruces.pickle")
 
-df_diarias_salidas=df_salidas %>% mutate(dia_viaje=as.Date(start_time_local)) %>%
+df_diarias_salidas=df_salidas_cruces %>% mutate(dia_viaje=as.Date(start_time_local)) %>%
   group_by(CVE_VIAL_INTER,dia_viaje) %>% summarise(n_salidas=n()) %>% ungroup() 
 
-df_diarias_llegadas=df_llegadas%>% 
+df_diarias_llegadas=df_llegadas_cruces%>% 
   mutate(dia_viaje=as.Date(start_time_local)) %>%
   group_by(CVE_VIAL_INTER,dia_viaje) %>% summarise(n_llegadas=n()) %>% ungroup()
 
-df_diarias=df_salidas %>% mutate(dia_viaje=as.Date(start_time_local)) %>%
+df_diarias=df_salidas_cruces %>% mutate(dia_viaje=as.Date(start_time_local)) %>%
   group_by(CVE_VIAL_INTER,dia_viaje) %>% summarise(n_salidas=n()) %>% ungroup() %>% 
   bind_rows({
-    df_llegadas%>% 
+    df_llegadas_cruces%>% 
       mutate(dia_viaje=as.Date(start_time_local)) %>%
       group_by(CVE_VIAL_INTER,dia_viaje) %>% summarise(n_llegadas=n()) %>% ungroup()
     
   }) %>% group_by(CVE_VIAL_INTER,dia_viaje) %>% summarise(n_salidas=sum(n_salidas,na.rm = T),
-                                                          n_llegadas=sum(n_llegadas,na.rm = T)) %>% ungroup() 
+                                                          n_llegadas=sum(n_llegadas,na.rm = T)) %>% ungroup() %>% 
+  st_cast("POINT")
 # %>% mutate_at(c("n_llegadas","n_salidas"), function(x)coalesce(x,as.integer(0))) 
 
 df_diarias%>%
@@ -91,6 +101,7 @@ df_diarias%>%
 dist=sf::st_distance(df_diarias)
 dbmodel1=hdbscan(dist, minPts = 5)
 saveRDS(dbmodel1,"data/dbmodel1_ecoVIZ.RDS")
+# dbmodel1=readRDS("data/dbmodel1_ecoVIZ.RDS")
 df_clust=df_diarias %>% mutate(cluster=dbmodel1$cluster)
 df_clust %>% ggplot(aes(color=factor(cluster))) +
   theme(legend.position = "none")+ geom_sf()
@@ -101,3 +112,8 @@ df_salidas %>%
   st_drop_geometry() %>% 
   jsonlite::toJSON() %>% 
   jsonlite::write_json("data/df_clusters.json")
+
+df_vial %>% 
+st_drop_geometry() %>% 
+  jsonlite::toJSON() %>% 
+  jsonlite::write_json("data/df_cruces.json")
