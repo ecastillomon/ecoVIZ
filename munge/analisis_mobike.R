@@ -105,6 +105,13 @@ saveRDS(dbmodel1,"data/dbmodel1_ecoVIZ.RDS")
 df_clust=df_diarias %>% mutate(cluster=dbmodel1$cluster)
 df_clust %>% ggplot(aes(color=factor(cluster))) +
   theme(legend.position = "none")+ geom_sf()
+
+df_salidas_cruces %>%
+  left_join(
+    {df_clust%>% select(CVE_VIAL_INTER,cluster) %>% st_drop_geometry() }, by=c("CVE_VIAL_INTER")) %>% 
+  # st_drop_geometry() %>% 
+  reticulate::py_save_object("data/df_clusters.pickle")
+
 df_salidas %>%
   st_join(
     {df_clust%>% select(-CVE_VIAL_INTER) %>% 
