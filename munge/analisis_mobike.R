@@ -72,6 +72,8 @@ df_diarias=df_salidas_cruces %>% mutate(dia_viaje=as.Date(start_time_local)) %>%
   }) %>% group_by(CVE_VIAL_INTER,dia_viaje) %>% summarise(n_salidas=sum(n_salidas,na.rm = T),
                                                           n_llegadas=sum(n_llegadas,na.rm = T)) %>% ungroup() %>% 
   st_cast("POINT")
+
+saveRDS(df_diarias,"cache/df_diarias.RDS")
 # %>% mutate_at(c("n_llegadas","n_salidas"), function(x)coalesce(x,as.integer(0))) 
 
 df_diarias%>%

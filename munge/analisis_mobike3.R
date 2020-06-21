@@ -81,6 +81,7 @@ df_llegadas_cruces %>%
   geom_sf(alpha=.5)
 
 ecobici=read.csv("data/2019-06.csv",stringsAsFactors = F) %>% 
+  bind_rows({read.csv("data/2019-05.csv",stringsAsFactors = F) }) %>% 
 mutate(hora_retiro=as.POSIXct(paste0(Fecha_Retiro," ",Hora_Retiro),
                               tryFormats = c("%d/%m/%Y %H:%M:%OS")), 
        hora_arribo=as.POSIXct(paste0(Fecha_Arribo," ",Hora_Arribo),
