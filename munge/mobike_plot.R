@@ -1,6 +1,11 @@
-# mobike=openxlsx::read.xlsx("data/Viajes CDMX con Colonias_Mobike.xlsx")
+library(dplyr)
+library(sf)
+ # mobike=openxlsx::read.xlsx("data/Viajes CDMX con Colonias_Mobike.xlsx")
 dat=mobike=openxlsx::read.xlsx("data/Viajes CDMX con Colonias_Mobike.xlsx",detectDates = TRUE) %>% 
-  mutate_at(c("start_time_local","end_time_local"), function(x)openxlsx::convertToDateTime(x) )
+  mutate_at(c("start_time_local","end_time_local"), function(x)openxlsx::convertToDateTime(x) ) %>% 
+  mutate(trip_id=row_number()) %>% filter(start_time_local <as.POSIXct("2019-06-06") 
+                                          & start_time_local >=as.POSIXct("2019-06-05"))  
+# %>% select(trip_id, bike_id, duration, start_time_local,end_time_local)
 
 
 df_salidas=dat%>%
@@ -18,6 +23,7 @@ df_cruces=readRDS("data/df_cruces.RDS")
 a=readRDS("cache/cdmx_boundary.RDS")
 
 df_salidas_cruces=df_salidas %>% 
+  select(trip_id) %>% 
   st_transform(st_crs(df_vial)) %>% 
   st_join(df_cruces, st_nearest_feature ) %>% st_join(a) %>% filter(!is.na(pais))
 
@@ -25,6 +31,7 @@ df_salidas_cruces=df_salidas %>%
 # reticulate::py_save_object(df_salidas_cruces,"data/df_salidas_cruces.pickle")
 
 df_llegadas_cruces=df_llegadas %>% 
+  select(trip_id) %>% 
   st_transform(st_crs(df_vial)) %>% 
   st_join(df_cruces, st_nearest_feature ) %>% st_join(a) %>% filter(!is.na(pais))
 
@@ -36,23 +43,29 @@ df_llegadas_cruces=df_llegadas %>%
 #     df_salidas_cruces %>% distinct(CVE_VIAL_INTER) %>%   st_drop_geometry()})
 
 
+df_mobike=df_llegadas_cruces %>% sf::st_drop_geometry() %>% mutate(tipo="llegada") %>% 
+  # head(1) %>%
+  bind_rows(df_salidas_cruces %>% sf::st_drop_geometry() %>% mutate(tipo="salida")) %>%
+  left_join(dat, by=c("trip_id")) %>%
+  mutate(latitud=ifelse(tipo=="llegada",lat_ini,lat_fin),
+         longitud=ifelse(tipo=="llegada",lon_ini,lon_fin)) %>% select(-matches("(lat|lon)_"))
 
-
-df_mobike=dat %>% distinct(bike_id, duration,distance) %>% 
-  # head(1) %>% 
-  left_join(df_salidas_cruces %>% select(bike_id,duration, distance,start_time_local,matches("(lat|lon)_"),
-                                         end_time_local,duration,
-                                         12:16) %>% sf::st_drop_geometry(),
-            by=c("bike_id","duration","distance")) %>% 
-  left_join(df_llegadas_cruces %>% select(bike_id,duration, distance,start_time_local,
-                                          end_time_local,duration,
-                                          14:16) %>% sf::st_drop_geometry(),
-            by=c("bike_id","duration","distance"), suffix=c("_salidas","_llegadas")) %>% 
-  filter(start_time_local_salidas <as.Date("2019-06-06") 
-                            & start_time_local_salidas >=as.Date("2019-06-05"))   %>% 
-  st_as_sf(coords = c("lat_ini", "lon_ini"), remove=F) %>% # set coordinates
-  # select(-matches("coordenadas")) %>% 
-  st_set_crs(4326)   
+reticulate::py_save_object(df_mobike ,"data/plot/df_mobike_ida_vuelta.pickle")
+# df_mobike=dat %>% distinct(bike_id, duration,distance) %>% 
+#   # head(1) %>% 
+#   left_join(df_salidas_cruces %>% select(bike_id,duration, distance,start_time_local,matches("(lat|lon)_"),
+#                                          end_time_local,duration,
+#                                          12:16) %>% sf::st_drop_geometry(),
+#             by=c("bike_id","duration","distance")) %>% 
+#   left_join(df_llegadas_cruces %>% select(bike_id,duration, distance,start_time_local,
+#                                           end_time_local,duration,
+#                                           14:16) %>% sf::st_drop_geometry(),
+#             by=c("bike_id","duration","distance"), suffix=c("_salidas","_llegadas")) %>% 
+#   # filter(start_time_local_salidas <as.Date("2019-06-06") 
+#   #                           & start_time_local_salidas >=as.Date("2019-06-05"))   %>% 
+#   st_as_sf(coords = c("lat_ini", "lon_ini"), remove=F) %>% # set coordinates
+#   # select(-matches("coordenadas")) %>% 
+#   st_set_crs(4326)   
 reticulate::py_save_object(df_mobike ,"data/plot/df_mobike_cruces.pickle")
 saveRDS(df_mobike,"cache/df_mobike_cruces.RDS")
 
@@ -72,7 +85,7 @@ df_ecobici=ecobici %>%
   summarise(n_salidas=n()) %>% ungroup() %>%
   bind_rows({
     ecobici %>%
-      mutate(hora_retiro=floor_date(hora_retiro,unit="15 minutes")) %>%
+      mutate(hora_retiro=lubridate::floor_date(hora_retiro,unit="15 minutes")) %>%
       group_by(estacion=Ciclo_Estacion_Arribo,hora_retiro=NA) %>% 
       summarise(n_llegadas=n()) %>% ungroup()  }) %>%  
   group_by(estacion) %>% summarise(n_salidas=sum(n_salidas,na.rm = T),
@@ -95,7 +108,8 @@ ggplot() +
   geom_sf(aes(alpha=viajes,size=n_salidas ,color=tipo), data=df_eco   )+
   geom_sf(aes(color=tipo), data=df_mobike %>% mutate(tipo="mobike")  ,alpha=.02 )+
   # geom_sf(aes(alpha=viajes,color=tipo),alpha=.5, data=df_mob)+
-  scale_fill_distiller(type="div")+facet_wrap(tipo~., scales = "fixed")+ggsave("plots/ecobici-mob.png")
+  scale_fill_distiller(type="div")+facet_wrap(tipo~., scales = "fixed")
+# +ggsave("plots/ecobici-mob.png")
 
 ##Por estaciones
 df_mobike_2=mat_simplificada %>%
