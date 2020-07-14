@@ -27,6 +27,11 @@ df_salidas_cruces=df_salidas %>%
   st_transform(st_crs(df_vial)) %>% 
   st_join(df_cruces, st_nearest_feature ) %>% st_join(a) %>% filter(!is.na(pais))
 
+
+ggplot()+geom_sf()+
+  geom_sf(aes(), data=df_salidas_cruces  ,alpha=.02 )+
+  scale_color_brewer(type="div")
+
 # saveRDS(df_salidas_cruces,"data/df_salidas_cruces.RDS")
 # reticulate::py_save_object(df_salidas_cruces,"data/df_salidas_cruces.pickle")
 
@@ -36,6 +41,10 @@ df_llegadas_cruces=df_llegadas %>%
   st_join(df_cruces, st_nearest_feature ) %>% st_join(a) %>% filter(!is.na(pais))
 
 
+ggplot()+
+  geom_sf(aes(shape=tipo,color=CVE_VIAL_INTER), data=df_salidas_cruces%>% mutate(tipo="salidas")  ,alpha=.02 )+
+  geom_sf(aes(shape=tipo,color=CVE_VIAL_INTER), data=df_llegadas_cruces %>% mutate(tipo="llegadas") ,alpha=.02 )+
+  scale_color_brewer(type="div")
 
 # df_estaciones_mobike=df_llegadas_cruces %>% distinct(CVE_VIAL_INTER) %>% 
 #   st_drop_geometry() %>% 
@@ -47,10 +56,25 @@ df_mobike=df_llegadas_cruces %>% sf::st_drop_geometry() %>% mutate(tipo="llegada
   # head(1) %>%
   bind_rows(df_salidas_cruces %>% sf::st_drop_geometry() %>% mutate(tipo="salida")) %>%
   left_join(dat, by=c("trip_id")) %>%
-  mutate(latitud=ifelse(tipo=="llegada",lat_ini,lat_fin),
-         longitud=ifelse(tipo=="llegada",lon_ini,lon_fin)) %>% select(-matches("(lat|lon)_"))
+  mutate(latitud=ifelse(tipo=="llegada",lat_fin,lat_ini),
+         longitud=ifelse(tipo=="llegada",lon_fin,lon_ini)) %>% select(-matches("(lat|lon)_"))
 
 reticulate::py_save_object(df_mobike ,"data/plot/df_mobike_ida_vuelta.pickle")
+
+df_mob=df_mobike %>%
+    st_as_sf(coords = c("latitud", "longitud"), remove=F) %>% # set coordinates
+    # select(-matches("coordenadas")) %>%
+    st_set_crs(4326)
+df_mob %>% 
+ggplot()+geom_sf()+
+  geom_sf(aes(color=tipo), data=df_mob  ,alpha=.02 )+
+  scale_color_brewer(type="div")
+
+
+
+c2=df_mob %>% group_by(CVE_VIAL_INTER, CVE_SEG_INTER) %>% count()
+
+
 # df_mobike=dat %>% distinct(bike_id, duration,distance) %>% 
 #   # head(1) %>% 
 #   left_join(df_salidas_cruces %>% select(bike_id,duration, distance,start_time_local,matches("(lat|lon)_"),
