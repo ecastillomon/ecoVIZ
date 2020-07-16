@@ -1,0 +1,119 @@
+---
+title: "Ecobici - Mobike"
+author: Esteban Castillo
+output: beamer_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(root.dir="/home/mika/ecobici-visualizacion/")
+# rmarkdown::render("rmarkdown/mobike_plot.Rmd")
+```
+## Mobike
+
+
+## Comparativa Viajes Por estación
+
+```{r echo=FALSE}
+
+df_colonias=df_mobike %>% 
+  distinct(Colonia_salidas=Colonia_Inicio, Colonia_llegadas=CoLonia_Fin) %>% st_drop_geometry() %>% 
+  tidyr::pivot_longer(cols = c(Colonia_salidas,Colonia_llegadas)) %>% 
+  distinct(colonia=value) %>% 
+  mutate(colonia=factor(colonia))
+  # distinct(colonia=Colonia_Inicio) %>% st_drop_geometry() %>% 
+  # bind_rows({
+  #   df_mobike %>% distinct(colonia=CoLonia_Fin)%>% st_drop_geometry()})  %>% 
+  # 
+  # st_drop_geometry() %>% 
+  
+
+df_mobike %>%
+
+  rename(Colonia_salidas=Colonia_Inicio, Colonia_llegadas=CoLonia_Fin) %>% 
+  mutate(Colonia_salidas= factor(Colonia_salidas) %>% forcats::fct_lump_n(.,n=7),
+         Colonia_llegadas= factor(Colonia_llegadas) %>% forcats::fct_lump_n(.,n=7)) %>% 
+  group_by(Colonia_salidas, Colonia_llegadas) %>% 
+  summarise(n=n())%>%ungroup() %>% 
+  arrange(desc(n)) %>% 
+  # filter(row_number()<50) %>%
+  ggplot(aes(y=n,axis2=Colonia_salidas,axis3=Colonia_llegadas,fill = Colonia_salidas))+
+  geom_flow(aes() ,width = 1/12) +
+  geom_stratum(width = 1/10, inherit.aes = TRUE, alpha=.5 ) +
+  geom_text(stat = "stratum",infer.label = TRUE) +
+  # geom_label(stat = "stratum", infer.label = TRUE, aes(size=n)) +
+  # scale_size_binned()+
+  scale_x_discrete(limits = c("Colonia Salidas", "Colonia Llegadas"), expand = c(.05, .05))+
+  scale_y_continuous(labels = scales::comma_format())+
+  theme_minimal()+
+  theme(legend.position = "none")
+
+```
+
+
+```{r}
+dat %>%
+  rename(Colonia_salidas=Colonia_Inicio, Colonia_llegadas=CoLonia_Fin) %>% 
+  mutate(Colonia_salidas= factor(Colonia_salidas) %>% forcats::fct_lump_n(.,n=7),
+         Colonia_llegadas= factor(Colonia_llegadas) %>% forcats::fct_lump_n(.,n=7)) %>% 
+  group_by(Colonia_salidas, Colonia_llegadas) %>% 
+  summarise(n=n())%>%ungroup() %>% 
+  # st_drop_geometry() %>% 
+  arrange(desc(n)) %>% 
+  # filter(row_number()<50) %>%
+  ggplot(aes(y=n,axis2=Colonia_salidas,axis3=Colonia_llegadas))+
+  geom_flow(aes( fill=Colonia_salidas) ,width = 1/12) +
+  geom_stratum(aes( fill=Colonia_salidas) ,width = .1, inherit.aes = TRUE ) +
+  # geom_stratum(aes( fill=Colonia_llegadas) ,width = .1, inherit.aes = TRUE ) +
+  geom_text(stat = "stratum",infer.label = TRUE) +
+  # geom_label(stat = "stratum", infer.label = TRUE, aes(size=n)) +
+  # scale_size_binned()+
+  scale_x_discrete(limits = c("Colonia Salidas", "Colonia Llegadas"), expand = c(.05, .05))+
+  scale_y_continuous(labels = scales::comma_format())+
+  theme_minimal()+
+  theme(legend.position = "none")
+```
+
+
+
+```{r}
+
+# Transform input data in a adjacency matrix
+adjacencyData =dat %>% 
+  mutate_at(c("Colonia_Inicio", "CoLonia_Fin"), function(x){stringr::str_replace_all(x,"DEL BOSQUE DE|CENTRO URBANO|UNIDAD HAB|FRACC |DE LA ","") }) %>%
+  # mutate_at(c("Colonia_Inicio", "CoLonia_Fin"), function(x){stringr::str_replace_all(x," ","\n") %>% stringr::str_replace("\n"," ") %>% stringr::str_replace("(\\\\n){2}"," ") }) %>%
+  # pull(Colonia_Inicio)
+with(table(Colonia_Inicio, CoLonia_Fin))
+
+# adjacencyData <- with(dat, table(Colonia_Inicio, CoLonia_Fin))
+
+# Charge the circlize library
+library(circlize)
+
+# Make the circular plot
+set.seed(17)
+jpeg("plots/circle_sankey.jpeg",  width = 5000, height = 5000, units = "px")
+# png("plots/circle_sankey.png",  width = 5000, height = 5000, units = "px")
+
+colonias=row.names(adjacencyData) %>% union(colnames(adjacencyData))
+# colonias %>% data.frame(colonia=.) %>% mutate(string_length=nchar(colonia %>% as.character()))->a4
+col_mat = rand_color(length(colonias), transparency = 0.5,luminosity = "dark", hue="monochrome")
+names(col_mat) = colonias
+
+
+# circos.track(track.index = 1, panel.fun = function(x, y) {
+#     circos.text(CELL_META$xcenter, CELL_META$ylim[1], CELL_META$sector.index, 
+#         facing = "clockwise", niceFacing = TRUE, adj = c(0, 0), cex=4.6)
+# }, bg.border = NA) 
+chordDiagram(adjacencyData, transparency = 0.5,
+             grid.col = col_mat,
+    annotationTrackHeight = c(.2),annotationTrack = c("grid"))
+circos.trackPlotRegion(track.index = 1, panel.fun = function(x, y) {
+  xlim = get.cell.meta.data("xlim")
+  ylim = get.cell.meta.data("ylim")
+  sector.name = get.cell.meta.data("sector.index")
+  circos.text(mean(xlim), ylim[1] + .1, sector.name, facing = "clockwise", niceFacing = TRUE, adj = c(0, 0.5), col = "black",cex=4)
+}, bg.border = NA)
+dev.off()
+
+```
+
